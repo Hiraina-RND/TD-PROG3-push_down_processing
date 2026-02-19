@@ -1,3 +1,4 @@
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -170,5 +171,45 @@ public class DataRetriever {
             throw new RuntimeException("Error executing query", e);
         }
         return findedInvoiceTaxSummaries;
+    }
+
+    BigDecimal computeWeightedTurnoverTtc() {
+        DBConnection dbConnection = new DBConnection();
+        String sql = """
+                SELECT SUM(
+                    CASE
+                        WHEN t.status = 'PAID'
+                            THEN t.total + (t.total * 20 / 100)
+                
+                        WHEN status = 'CONFIRMED'
+                            THEN ((t.total + (t.total * 20 / 100)) * 50) / 100
+                
+                        WHEN t.status = 'DRAFT'
+                            THEN 0
+                    END
+                ) AS total
+                FROM (
+                    SELECT
+                        i.status,
+                        SUM(il.unit_price * il.quantity) AS total
+                    FROM invoice_line il
+                    JOIN invoice i ON i.id = il.invoice_id
+                    GROUP BY i.id, i.status
+                ) t
+                """;
+        BigDecimal result = BigDecimal.valueOf(0.0);
+
+        try (
+                Connection connection = dbConnection.getConnection();
+                PreparedStatement ps = connection.prepareStatement(sql);
+                ResultSet resultSet = ps.executeQuery()
+        ){
+            while (resultSet.next()){
+                result = resultSet.getBigDecimal("total");
+            }
+        } catch (SQLException e){
+            throw new RuntimeException("Error executing query", e);
+        }
+        return result;
     }
 }

@@ -10,5 +10,7 @@ public class Main {
         System.out.println(dataRetriever.computeWeightedTurnover());
         System.out.println("=====================");
         System.out.println(dataRetriever.findInvoiceTaxSummaries());
+        System.out.println("=====================");
+        System.out.println(dataRetriever.computeWeightedTurnoverTtc());
     }
 }
