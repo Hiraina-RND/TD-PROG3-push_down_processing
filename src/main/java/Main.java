@@ -4,5 +4,7 @@ public class Main {
         System.out.println(dataRetriever.findInvoiceTotals());
         System.out.println("=====================");
         System.out.println(dataRetriever.findConfirmedAndPaidInvoiceTotals());
+        System.out.println("=====================");
+        System.out.println(dataRetriever.computeStatusTotals());
     }
 }
