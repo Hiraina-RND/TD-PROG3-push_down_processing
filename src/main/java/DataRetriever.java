@@ -106,4 +106,34 @@ public class DataRetriever {
                 total_draft
         );
     }
+
+    Double computeWeightedTurnover() {
+        DBConnection dbConnection = new DBConnection();
+        String sql = """
+                select
+                    SUM(
+                        CASE
+                            WHEN i.status = 'PAID' THEN il.unit_price * il.quantity
+                            WHEN i.status = 'CONFIRMED' THEN ((il.unit_price * il.quantity) * 50) / 100
+                            WHEN i.status = 'DRAFT' THEN 0
+                        END
+                    ) as total
+                from invoice_line il
+                join invoice i on i.id = il.invoice_id;
+                """;
+        Double result = 0.0;
+
+        try (
+                Connection connection = dbConnection.getConnection();
+                PreparedStatement ps = connection.prepareStatement(sql);
+                ResultSet resultSet = ps.executeQuery()
+        ){
+            while (resultSet.next()){
+                result = resultSet.getDouble("total");
+            }
+        } catch (SQLException e){
+            throw new RuntimeException("Error executing query", e);
+        }
+        return result;
+    }
 }
